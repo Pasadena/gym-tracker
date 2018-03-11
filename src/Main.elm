@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Html exposing (Html, text, div, h3, img, button, label, input, select, option, span, p, h4)
+import Html exposing (Html, text, div, h3, img, button, label, input, select, option, span, p, h4, ul ,li)
 import Html.Attributes exposing (src, class, value, type_, style)
 import Html.Events exposing (onClick, onInput)
 
@@ -55,16 +55,18 @@ model =
   , repetitions = ""
   }
 
-currentExercise: Exercise
-currentExercise =
-  {
-    exerciseType = "",
-    sets = []
-  }
-
 defaultTypes: List ExerciseType
 defaultTypes =
   { name = "Bench press" } :: { name = "Deadlift" } :: { name = "Incline Dumbbell Press" }  :: []
+
+currentExercise: Exercise
+currentExercise =
+  {
+    exerciseType = case List.head defaultTypes of 
+      Just firstType -> firstType.name 
+      Nothing -> "",
+    sets = []
+  }
 
 now : Cmd Msg
 now =
@@ -104,7 +106,13 @@ update msg model =
         in
           (nextModel, Cmd.none)
       Exercise_Selected exerciseName ->
-        ({ model | selectedExercise = exerciseName }, Cmd.none)
+        let
+          logged = Debug.log "" exerciseName
+          foo = Debug.log "" model.currentExercise
+          updatedExercise = Debug.log "" model.currentExercise |> setExerciseType exerciseName
+          newModel = { model | currentExercise = updatedExercise }
+        in
+          (newModel, Cmd.none)
       Weight_Changed weight ->
         ({ model | repWeight = weight }, Cmd.none)
       Repetitions_Changed reps ->
@@ -114,7 +122,9 @@ update msg model =
           newSet = { weight = Result.withDefault 0 (String.toInt model.repWeight)
             , repetitions = Result.withDefault 0 (String.toInt model.repetitions) }
           withNewSet = newSet :: model.currentExercise.sets
-          nextModel = { model | currentExercise = model.currentExercise |> setListOfSets withNewSet }
+          nextModel = { model | currentExercise = model.currentExercise 
+            |> setListOfSets withNewSet
+          }
         in
           (nextModel, Cmd.none)
       Add_Exercise ->
@@ -131,6 +141,10 @@ update msg model =
 setListOfSets: List Rep -> Exercise -> Exercise
 setListOfSets sets exercise =
   { exercise | sets = sets }
+  
+setExerciseType: String -> Exercise -> Exercise
+setExerciseType exerciseType exercise =
+  { exercise | exerciseType = exerciseType }
 
 setListOfExercises: List Exercise -> Maybe Workout -> Maybe Workout
 setListOfExercises exercises workout =
@@ -187,6 +201,7 @@ workoutForm model =
           , div [] [
             button [ onClick Add_Exercise] [ text "Add Exercise"]
           ]
+          , exerciseList model.currentWorkout
         ]
         , div [ class "workout-form-footer" ] [
           button [ class "button-primary" ] [ text "Save" ]
@@ -220,6 +235,22 @@ newRepItem =
     , button [ onClick Add_Set  ] [ text "Add to Exercise"]
   ]
 
+exerciseList: Maybe Workout -> Html Msg
+exerciseList workout =
+  case workout of
+    Just wo -> div [] (List.map renderExercise wo.exercises)
+    Nothing -> div [] []
+
+renderExercise: Exercise -> Html Msg
+renderExercise exercise =
+  div [] [
+    h4 [] [ text exercise.exerciseType ],
+    ul [] (List.map renderSetInExercise exercise.sets)
+  ]
+
+renderSetInExercise: Rep -> Html Msg
+renderSetInExercise set =
+  li [] [ repItem set ]
 
 
 ---- PROGRAM ----
