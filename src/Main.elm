@@ -6,7 +6,10 @@ import Html.Events exposing (onClick, onInput)
 
 import Date exposing(..)
 import Task exposing(..)
+import Color exposing(..)
 import Date.Extra
+
+import Material.Icons.Action exposing (check_circle)
 
 
 ---- MODEL ----
@@ -199,12 +202,12 @@ workoutForm model =
           , newRepItem
           , div [] ( List.map repItem model.currentExercise.sets )
           , div [] [
-            button [ onClick Add_Exercise] [ text "Add Exercise"]
+            button [ onClick Add_Exercise, class "button-primary"] [ text "Done"]
           ]
           , exerciseList model.currentWorkout
         ]
         , div [ class "workout-form-footer" ] [
-          button [ class "button-primary" ] [ text "Save" ]
+          button [ class "button-primary" ] [ text "Create" ]
           , button [ class "button" ] [ text "Cancel" ]
         ]
       ]
@@ -215,7 +218,7 @@ typeOption exerciseType =
 
 repItem: Rep -> Html Msg
 repItem rep =
-  div [ class "rep-item" ] [
+  div [ class "rep-item read-only-rep" ] [
     p [ class "rep-item-val" ] [ text (String.append (toString rep.repetitions) " reps ") ]
     , span [ style [("alignSelf", "center"), ("marginLeft", "3px"), ("marginRight", "3px")] ] [ text "w/" ]
     , p [ class "rep-item-val" ] [ text (String.append (toString rep.weight) " kg") ]
@@ -232,7 +235,7 @@ newRepItem =
       label [ class "input-label" ] [ text "Weight" ]
       , input [ type_ "text", onInput Weight_Changed ] []
     ]
-    , button [ onClick Add_Set  ] [ text "Add to Exercise"]
+    , button [ onClick Add_Set, class "rep-button"] [check_circle Color.red 36 ]
   ]
 
 exerciseList: Maybe Workout -> Html Msg

@@ -14,26 +14,76 @@ img {
   max-width: 200px;
 }
 
+p {
+  margin: 0;
+}
+
+.button-primary {
+  height: 40px;
+  font-size: 1.2em;
+  font-weight: 700;
+  background-color: blue;
+  color: #ffff;
+  cursor: pointer;
+}
+
+.button-primary:hover {
+  background-color: red;
+}
+
 .workout-form {
   border: 1px solid red;
   width: 50%;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
+  align-items: center;
 }
 
 .workout-form-header {
   background-color: red;
   color: white;
+  width: 100%;
+}
+
+.workout-form-content {
+  padding: 12px;
+}
+
+.workout-form-footer {
+  width: 100%;
+  padding: 12px;
 }
 
 .rep-item {
   display: flex;
   justify-content: center;
+  padding: 12px;
+}
+
+.read-only-rep {
+  border-bottom: 2px solid red;
+  background-color: rgba(255, 33, 81, 0.1);
+}
+
+.rep-button {
+  padding: 0;
+  border: none;
+  background-color: white;
+  cursor: pointer;
+  align-items: flex-end;
+  margin-left: 20px;
 }
 
 .input-container {
   padding: 6px;
   display: flex;
   flex-direction: column;
+}
+
+.input-container > label {
+  padding-bottom: 6px;
+  color: rgba(0, 0, 0, 0.7);
+  font-weight: 700;
+  font-size: 1.1em;
 }
