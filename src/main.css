@@ -17,6 +17,21 @@ img {
 p {
   margin: 0;
 }
+select {
+  height: 30px;
+  font-size: 1em;
+}
+
+input[type="text"] {
+  line-height: 20px;
+  border: 0px;
+  border-bottom: 2px solid red;
+  font-size: 1em;
+}
+
+input[type="text"]:focus {
+  outline: none;
+}
 
 .button-primary {
   height: 40px;
@@ -44,6 +59,8 @@ p {
   background-color: red;
   color: white;
   width: 100%;
+  font-size: 2em;
+  font-weight: 700;
 }
 
 .workout-form-content {
@@ -58,7 +75,7 @@ p {
 .rep-item {
   display: flex;
   justify-content: center;
-  padding: 12px;
+  padding-bottom: 12px;
 }
 
 .read-only-rep {
@@ -79,6 +96,7 @@ p {
   padding: 6px;
   display: flex;
   flex-direction: column;
+  font-size: 1.3em;
 }
 
 .input-container > label {
