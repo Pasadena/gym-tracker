@@ -25,7 +25,7 @@ type alias ExerciseType =
 
 type alias Exercise =
   {
-  exerciseType: String
+  exerciseType: ExerciseType
   , sets: List Rep
   }
 
@@ -41,7 +41,7 @@ type alias Model =
     currentWorkout: Maybe Workout,
     currentDate: Maybe Date,
     currentExercise: Exercise,
-    selectedExercise: String,
+    selectedExercise: ExerciseType,
     repWeight: String,
     repetitions: String
   }
@@ -53,7 +53,7 @@ model =
   , currentWorkout = Nothing
   , currentDate = Nothing
   , currentExercise = currentExercise
-  , selectedExercise = ""
+  , selectedExercise = { name = "Bench press" }
   , repWeight = ""
   , repetitions = ""
   }
@@ -65,9 +65,9 @@ defaultTypes =
 currentExercise: Exercise
 currentExercise =
   {
-    exerciseType = case List.head defaultTypes of 
-      Just firstType -> firstType.name 
-      Nothing -> "",
+    exerciseType = case List.head defaultTypes of
+      Just firstType -> firstType
+      Nothing -> { name = "Bench press" },
     sets = []
   }
 
@@ -110,10 +110,10 @@ update msg model =
           (nextModel, Cmd.none)
       Exercise_Selected exerciseName ->
         let
-          logged = Debug.log "" exerciseName
-          foo = Debug.log "" model.currentExercise
-          updatedExercise = Debug.log "" model.currentExercise |> setExerciseType exerciseName
-          newModel = { model | currentExercise = updatedExercise }
+          updatedExercise = model.currentExercise |> setExerciseType exerciseName
+          newModel = { model | currentExercise = updatedExercise,
+            selectedExercise = { name = exerciseName }
+          }
         in
           (newModel, Cmd.none)
       Weight_Changed weight ->
@@ -125,8 +125,10 @@ update msg model =
           newSet = { weight = Result.withDefault 0 (String.toInt model.repWeight)
             , repetitions = Result.withDefault 0 (String.toInt model.repetitions) }
           withNewSet = newSet :: model.currentExercise.sets
-          nextModel = { model | currentExercise = model.currentExercise 
-            |> setListOfSets withNewSet
+          nextModel = { model | currentExercise = model.currentExercise
+            |> setListOfSets withNewSet,
+            repWeight = "",
+            repetitions = ""
           }
         in
           (nextModel, Cmd.none)
@@ -136,7 +138,9 @@ update msg model =
             Just workout -> workout.exercises
             Nothing -> []
           withNewExercise = model.currentExercise :: existingExercises
-          nextModel = { model | currentWorkout = model.currentWorkout |> setListOfExercises withNewExercise }
+          nextModel = { model | currentWorkout = model.currentWorkout |> setListOfExercises withNewExercise,
+            currentExercise = currentExercise
+          }
         in
           (nextModel, Cmd.none)
 
@@ -144,10 +148,13 @@ update msg model =
 setListOfSets: List Rep -> Exercise -> Exercise
 setListOfSets sets exercise =
   { exercise | sets = sets }
-  
+
 setExerciseType: String -> Exercise -> Exercise
-setExerciseType exerciseType exercise =
-  { exercise | exerciseType = exerciseType }
+setExerciseType exerciseName exercise =
+  let
+    exerciseType = Debug.log "" { name = exerciseName}
+  in
+    { exercise | exerciseType = exerciseType }
 
 setListOfExercises: List Exercise -> Maybe Workout -> Maybe Workout
 setListOfExercises exercises workout =
@@ -197,9 +204,9 @@ workoutForm model =
         , div [ class "workout-form-content" ] [
           div [ class "input-container" ] [
             label [] [ text "Whatcha gonna do:"]
-            , select [ class "type-select", value model.selectedExercise, onInput Exercise_Selected ] ( List.map typeOption defaultTypes )
+            , select [ class "type-select", value model.selectedExercise.name, onInput Exercise_Selected ] ( List.map typeOption defaultTypes )
           ]
-          , newRepItem
+          , newRepItem model
           , div [] ( List.map repItem model.currentExercise.sets )
           , div [] [
             button [ onClick Add_Exercise, class "button-primary"] [ text "Done"]
@@ -224,16 +231,16 @@ repItem rep =
     , p [ class "rep-item-val" ] [ text (String.append (toString rep.weight) " kg") ]
   ]
 
-newRepItem: Html Msg
-newRepItem =
+newRepItem: Model -> Html Msg
+newRepItem model =
   div [ class "rep-item" ] [
     div [ class "input-container" ] [
       label [ class "input-label" ] [ text "Repetitions" ]
-      , input [ type_ "text", onInput Repetitions_Changed ] []
+      , input [ type_ "text", value model.repetitions, onInput Repetitions_Changed ] []
     ]
     , div [ class "input-container" ] [
       label [ class "input-label" ] [ text "Weight" ]
-      , input [ type_ "text", onInput Weight_Changed ] []
+      , input [ type_ "text", value model.repWeight, onInput Weight_Changed ] []
     ]
     , button [ onClick Add_Set, class "rep-button"] [check_circle Color.red 36 ]
   ]
@@ -247,7 +254,7 @@ exerciseList workout =
 renderExercise: Exercise -> Html Msg
 renderExercise exercise =
   div [] [
-    h4 [] [ text exercise.exerciseType ],
+    h4 [] [ text exercise.exerciseType.name ],
     ul [] (List.map renderSetInExercise exercise.sets)
   ]
 
