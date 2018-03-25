@@ -1,6 +1,6 @@
 module Main exposing (..)
 
-import Html exposing (Html, text, div, h3, img, button, label, input, select, option, span, p, h4, ul ,li)
+import Html exposing (Html, text, div, h3, img, button, label, input, select, option, span, p, h4, h1, ul ,li)
 import Html.Attributes exposing (src, class, value, type_, style)
 import Html.Events exposing (onClick, onInput)
 
@@ -195,7 +195,7 @@ view : Model -> Html Msg
 view model =
     div [class "content"]
         [
-        h3 [] [ text "Current week"]
+        h1 [] [ text "Current week"]
         , div [class "week-container"] [  ]
         , workoutList model
         , button [ onClick Init_Workout ] [ text "New exercise"]
@@ -263,7 +263,9 @@ newRepItem model =
       label [ class "input-label" ] [ text "Weight" ]
       , input [ type_ "text", value model.repWeight, onInput Weight_Changed ] []
     ]
-    , button [ onClick Add_Set, class "rep-button"] [check_circle Color.red 36 ]
+    , div [ class "rep-button-container" ] [
+      button [ onClick Add_Set, class "rep-button"] [check_circle Color.red 36 ]
+    ]
   ]
 
 exerciseList: Maybe Workout -> Html Msg
