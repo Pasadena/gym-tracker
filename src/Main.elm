@@ -7,7 +7,7 @@ import Html.Events exposing (onClick, onInput)
 import Date exposing(..)
 import Task exposing(..)
 import Color exposing(..)
-import Date.Extra
+import Date.Extra exposing (toFormattedString)
 
 import Material.Icons.Action exposing (check_circle)
 
@@ -92,6 +92,7 @@ type Msg
     | Repetitions_Changed String
     | Add_Set
     | Add_Exercise
+    | Create_Exercise
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -143,6 +144,14 @@ update msg model =
           }
         in
           (nextModel, Cmd.none)
+      Create_Exercise ->
+        let
+          withNewWorkout = case model.currentWorkout of
+            Just workout -> workout :: model.workouts
+            Nothing -> model.workouts
+          nextModel = { model | currentWorkout = Nothing, workouts = withNewWorkout }
+        in
+          (nextModel, Cmd.none)
 
 
 setListOfSets: List Rep -> Exercise -> Exercise
@@ -188,9 +197,21 @@ view model =
         [
         h3 [] [ text "Current week"]
         , div [class "week-container"] [  ]
+        , workoutList model
         , button [ onClick Init_Workout ] [ text "New exercise"]
         , workoutForm model
       ]
+
+workoutList: Model -> Html Msg
+workoutList model =
+  div [class "workout-list"] (List.map workoutItem model.workouts)
+
+workoutItem: Workout -> Html Msg
+workoutItem workout =
+  div [ class "workout-item" ] [
+    div [] [ text (toFormattedString "dd.MM.yyyy" workout.date) ]
+    , div [] [ text (toString (List.length workout.exercises)) ]
+  ]
 
 workoutForm: Model -> Html Msg
 workoutForm model =
@@ -214,7 +235,7 @@ workoutForm model =
           , exerciseList model.currentWorkout
         ]
         , div [ class "workout-form-footer" ] [
-          button [ class "button-primary" ] [ text "Create" ]
+          button [ class "button-primary", onClick Create_Exercise ] [ text "Create" ]
           , button [ class "button" ] [ text "Cancel" ]
         ]
       ]
