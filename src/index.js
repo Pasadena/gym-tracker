@@ -6,14 +6,22 @@ import fbConfig from '../firebase-config';
 
 firebase.initializeApp(fbConfig);
 
+const database = firebase.database();
+
 var app = Main.embed(document.getElementById('root'));
 
 app.ports.fetchWorkouts.subscribe(function(weekNumber) {
-  const workouts = firebase.database().ref('workouts');
+  const workouts = database.ref('workouts');
   workouts.on('value', (snapshot) => {
     const workoutsForWeek = snapshot.val().filter(wo => wo.weekNumber === weekNumber);
     app.ports.receiveWorkouts.send(workoutsForWeek);
   });
-})
+});
+
+app.ports.saveWorkout.subscribe(workout => {
+  const workouts = database.ref('workouts');
+  const savedDoc = workouts.push(workout);
+  app.ports.saveSucceeds.send(savedDoc);
+});
 
 registerServiceWorker();

@@ -18,7 +18,8 @@ type alias Exercise =
   }
 
 type alias Workout =
-  { date: Date
+  { uuid: Maybe String
+  , date: Date
   , weekNumber: Int
   , exercises: List Exercise
   }

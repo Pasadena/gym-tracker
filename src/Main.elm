@@ -77,7 +77,8 @@ type Msg
     | Repetitions_Changed String
     | Add_Set
     | Add_Exercise
-    | Create_Exercise
+    | Create_Workout
+    | Workout_Created Workout
     | Workouts_Loaded (List Workout)
     | NoOp
 
@@ -134,11 +135,16 @@ update msg model =
           }
         in
           (nextModel, Cmd.none)
-      Create_Exercise ->
+      Create_Workout ->
         let
-          withNewWorkout = case model.currentWorkout of
-            Just workout -> workout :: model.workouts
-            Nothing -> model.workouts
+          newWorkout = case model.currentWorkout of
+            Just workout -> workout
+            Nothing -> Debug.crash "oh no :("
+        in
+          (model, saveWorkout (workoutEncoder newWorkout))
+      Workout_Created workout ->
+        let
+          withNewWorkout = workout :: model.workouts
           nextModel = { model | currentWorkout = Nothing, workouts = withNewWorkout }
         in
           (nextModel, Cmd.none)
@@ -173,7 +179,8 @@ startNewWorkout model =
       Nothing -> Date.fromString "2018/1/1" |> Result.withDefault (Date.fromTime 0)
       Just date -> date
     newWorkout =
-      { date = today
+      { uuid = Nothing
+      , date = today
       , weekNumber = Date.Extra.weekNumber today
       , exercises = []
       }
@@ -229,7 +236,7 @@ workoutForm model =
           , exerciseList model.currentWorkout
         ]
         , div [ class "workout-form-footer" ] [
-          button [ class "button-primary", onClick Create_Exercise ] [ text "Create" ]
+          button [ class "button-primary", onClick Create_Workout ] [ text "Create" ]
           , button [ class "button" ] [ text "Cancel" ]
         ]
       ]
@@ -285,6 +292,16 @@ decodeSubscriptions: Decode.Value -> Result String (List Workout)
 decodeSubscriptions json =
   Decode.decodeValue workoutListDecoder json
 
+decodeSubscription: Decode.Value -> Result String Workout
+decodeSubscription json =
+  Decode.decodeValue workoutDecoder json
+
+jsonToWorkout: Decode.Value -> Msg
+jsonToWorkout jsonVal =
+  case (decodeSubscription jsonVal) of
+    Ok workout -> Workout_Created workout
+    Err message -> NoOp
+
 getJsonResult: Decode.Value -> Msg
 getJsonResult jsonVal =
   case (decodeSubscriptions jsonVal) of
@@ -293,7 +310,10 @@ getJsonResult jsonVal =
 
 subscriptions: Model -> Sub Msg
 subscriptions model =
-  receiveWorkouts getJsonResult
+  Sub.batch([
+    receiveWorkouts getJsonResult
+    , saveSucceeds jsonToWorkout
+    ])
 
 ---- PROGRAM ----
 
