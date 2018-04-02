@@ -1,5 +1,7 @@
 module Main exposing (..)
 
+import Types exposing (Rep, ExerciseType, Exercise, Workout)
+
 import Html exposing (Html, text, div, h3, img, button, label, input, select, option, span, p, h4, h1, ul ,li)
 import Html.Attributes exposing (src, class, value, type_, style)
 import Html.Events exposing (onClick, onInput)
@@ -8,32 +10,14 @@ import Date exposing(..)
 import Task exposing(..)
 import Color exposing(..)
 import Date.Extra exposing (toFormattedString)
+import FirebaseConnector exposing (..)
+
+import Json.Decode as Decode
 
 import Material.Icons.Action exposing (check_circle)
 
 
 ---- MODEL ----
-
-type alias Rep =
-  {
-  weight: Int
-  , repetitions: Int
-  }
-
-type alias ExerciseType =
-  { name: String }
-
-type alias Exercise =
-  {
-  exerciseType: ExerciseType
-  , sets: List Rep
-  }
-
-type alias Workout =
-  { date: Date
-  , weekNumber: Int
-  , exercises: List Exercise
-  }
 
 type alias Model =
   {
@@ -45,6 +29,7 @@ type alias Model =
     repWeight: String,
     repetitions: String
   }
+
 
 model: Model
 model =
@@ -93,6 +78,8 @@ type Msg
     | Add_Set
     | Add_Exercise
     | Create_Exercise
+    | Workouts_Loaded (List Workout)
+    | NoOp
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -105,10 +92,13 @@ update msg model =
           (newModel, Cmd.none)
       Current_Date date ->
         let
+          currentWeek = case date of
+            Just val -> Date.Extra.weekNumber val
+            Nothing -> -1
           nextModel =
             { model | currentDate = date }
         in
-          (nextModel, Cmd.none)
+          (nextModel, fetchWorkouts currentWeek)
       Exercise_Selected exerciseName ->
         let
           updatedExercise = model.currentExercise |> setExerciseType exerciseName
@@ -152,6 +142,10 @@ update msg model =
           nextModel = { model | currentWorkout = Nothing, workouts = withNewWorkout }
         in
           (nextModel, Cmd.none)
+      Workouts_Loaded wos ->
+        ({ model | workouts = wos }, Cmd.none)
+      NoOp ->
+        (model, Cmd.none)
 
 
 setListOfSets: List Rep -> Exercise -> Exercise
@@ -285,6 +279,21 @@ renderSetInExercise: Rep -> Html Msg
 renderSetInExercise set =
   li [] [ repItem set ]
 
+--- SUBSCRIPTIONS ---
+
+decodeSubscriptions: Decode.Value -> Result String (List Workout)
+decodeSubscriptions json =
+  Decode.decodeValue workoutListDecoder json
+
+getJsonResult: Decode.Value -> Msg
+getJsonResult jsonVal =
+  case (decodeSubscriptions jsonVal) of
+    Ok workouts -> Workouts_Loaded workouts
+    Err message -> NoOp
+
+subscriptions: Model -> Sub Msg
+subscriptions model =
+  receiveWorkouts getJsonResult
 
 ---- PROGRAM ----
 
@@ -295,5 +304,5 @@ main =
         { view = view
         , init = init
         , update = update
-        , subscriptions = always Sub.none
+        , subscriptions = subscriptions
         }
