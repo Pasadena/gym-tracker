@@ -13,7 +13,7 @@ type alias ExerciseType =
 
 type alias Exercise =
   {
-  exerciseType: Maybe ExerciseType
+  exerciseType: ExerciseType
   , sets: List Rep
   }
 
