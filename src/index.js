@@ -13,7 +13,7 @@ var app = Main.embed(document.getElementById('root'));
 app.ports.fetchWorkouts.subscribe(function(weekNumber) {
   const workouts = database.ref('workouts');
   workouts.on('value', (snapshot) => {
-    const workoutsForWeek = snapshot.val().filter(wo => wo.weekNumber === weekNumber);
+    const workoutsForWeek = Object.values(snapshot.val()).filter(wo => wo.weekNumber === weekNumber);
     app.ports.receiveWorkouts.send(workoutsForWeek);
   });
 });
